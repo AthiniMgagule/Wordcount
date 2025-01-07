@@ -3,6 +3,9 @@ package Wordcount;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 
 public class Wordcount {
@@ -22,18 +25,28 @@ public class Wordcount {
         int totalLineCount = 0;
         HashMap<String, Integer> totalWordFrequency = new HashMap<>();
 
-        for (String filename : files) {
-            filename = filename.trim();
-            FileStats stats = countWords(filename);
-            System.out.println("Number of words in " + filename + " = " + stats.wordCount);
-            System.out.println("Number of characters in " + filename + " (with spaces) = " + stats.charCountWithSpaces);
-            System.out.println("Number of characters in " + filename + " (without spaces) = " + stats.charCountWithoutSpaces);
-            System.out.println("Number of lines in " + filename + " = " + stats.lineCount);
-            System.out.println("Word frequency in " + filename + " = " + stats.wordFrequency);
-            totalWordCount += stats.wordCount;
-            totalCharCount += stats.charCountWithSpaces;
-            totalLineCount += stats.lineCount;
-            mergeWordFrequencies(totalWordFrequency, stats.wordFrequency);
+        try (PrintWriter csvWriter = new PrintWriter(new FileWriter("file_stats.csv"))) {
+            csvWriter.println("Filename,Word Count,Char Count (with spaces),Char Count (without spaces),Line Count,Word Frequency");
+
+            for (String filename : files) {
+                filename = filename.trim();
+                FileStats stats = countWords(filename);
+                System.out.println("Number of words in " + filename + " = " + stats.wordCount);
+                System.out.println("Number of characters in " + filename + " (with spaces) = " + stats.charCountWithSpaces);
+                System.out.println("Number of characters in " + filename + " (without spaces) = " + stats.charCountWithoutSpaces);
+                System.out.println("Number of lines in " + filename + " = " + stats.lineCount);
+                System.out.println("Word frequency in " + filename + " = " + stats.wordFrequency);
+                totalWordCount += stats.wordCount;
+                totalCharCount += stats.charCountWithSpaces;
+                totalLineCount += stats.lineCount;
+                mergeWordFrequencies(totalWordFrequency, stats.wordFrequency);
+
+                csvWriter.printf("%s,%d,%d,%d,%d,%s%n", filename, stats.wordCount, stats.charCountWithSpaces, stats.charCountWithoutSpaces, stats.lineCount, stats.wordFrequency);
+            }
+
+            csvWriter.printf("Total,%d,%d,,%d,%s%n", totalWordCount, totalCharCount, totalLineCount, totalWordFrequency);
+        } catch (IOException e) {
+            System.out.println("Error writing to CSV file: " + e.getMessage());
         }
 
         System.out.println("Total number of words in all files = " + totalWordCount);
